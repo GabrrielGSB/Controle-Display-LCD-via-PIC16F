@@ -17,14 +17,22 @@
 ;====================================================================
 CBLOCK  0x20           
    count1
+   err
+   steep
+   ystep
+   temp
    X0
    X0old
    X1
    X1old
+   dx
+   temp_x
    Y0
    Y0old
    Y1
    Y1old
+   dy
+   temp_y
    Altura
    AlturaOld
    Largura
@@ -94,28 +102,28 @@ definicaoVariaveis:
    MOVWF COR3
    
    ;Parâmetros para posição inical e final do desenho
-   MOVLW .10
+   MOVLW .0
    MOVWF X0
    MOVWF X0old
    
-   MOVLW .50
+   MOVLW .65
    MOVWF Y0
    MOVWF Y0old
    
-   MOVLW .0
+   MOVLW .131
    MOVWF X1
    MOVWF X1old
    
-   MOVLW .0
+   MOVLW .1
    MOVWF Y1
    MOVWF Y1old
    
    ;Parâmetros para largura (L) e altura (H) do retângulo desenhado
-   MOVLW .50
+   MOVLW .1
    MOVWF Largura
    MOVWF LarguraOld
    
-   MOVLW .1
+   MOVLW .50
    MOVWF Altura
    MOVWF AlturaOld
    
@@ -124,7 +132,7 @@ definicaoVariaveis:
    MOVWF Raio
    
 chamadaFuncoes
-   CALL desenharRetanguloPreenchido
+   CALL desenharLinha
 
 loop
    CLRWDT
@@ -154,52 +162,6 @@ desenharPixel:
    CALL enviarDados
    
    RETURN
-  
-desenharLinhaVertical:
-   MOVF  Y0    , W
-   ADDWF Altura, F
-    
-   loopLinhaV
-      BCF   STATUS, Z
-      MOVF  Y0    , W
-      SUBWF Altura, W
-
-      BTFSC STATUS, Z              
-	 GOTO fimLoopLinhaV 
-	 CALL desenharPixel
-	   
-      INCF Y0, F
-      GOTO loopLinhaV
-
-      fimLoopLinhaV
-	 MOVF  Y0old    , W
-	 MOVWF Y0
-	 MOVF  AlturaOld, W
-	 MOVWF Altura
-	 RETURN
-	
-desenharLinhaHorizontal:
-   MOVF  X0     , W
-   ADDWF Largura, F
-    
-   loopLinhaH
-      BCF   STATUS, Z
-      MOVF  X0    , W
-      SUBWF Largura, W
-
-      BTFSC STATUS, Z              
-	 GOTO fimLoopLinhaH 
-	 CALL desenharPixel
-	   
-      INCF X0, F
-      GOTO loopLinhaH
-
-      fimLoopLinhaH
-	 MOVF  X0old     , W
-	 MOVWF X0
-	 MOVF  LarguraOld, W
-	 MOVWF Largura
-	 RETURN
 
 desenharRetanguloPreenchido:
    MOVF X0, W
@@ -500,6 +462,182 @@ definirIntervalo:
    CALL enviarComando
    CALL microDelay
    RETURN
+   
+
+
+; Variáveis Temporárias
+; steep  - Flag para inclinação da linha
+; dx     - Delta x
+; dy     - Delta y
+; err    - Erro inicial
+; ystep  - Passo para y
+; Variables should be stored in predefined locations in RAM
+
+; Initialization
+desenharLinha:
+   ; Calcula dy = abs(y1 - y0) e dx = abs(x1 - x0)=======================
+   BCF     STATUS, C
+   MOVF    Y0, W
+   SUBWF   Y1, W            ; W = y1 - y0
+   MOVWF   dy
+   BTFSC   STATUS, C        ; Se y1 >= y0, não precisamos inverter
+      NOP                   ; dy = abs(y1 - y0)
+   BTFSS   STATUS, C
+      CALL inverterDy	    ; Caso contrário, inverter o sinal
+      
+   BCF     STATUS, C
+   MOVF    X0, W
+   SUBWF   X1, W            ; W = x1 - x0
+   MOVWF   dx		    ; dx = abs(x1 - x0)
+   BTFSC   STATUS, C
+      NOP
+   BTFSS   STATUS, C
+      CALL inverterDx
+   ;===========================================================
+   
+   ; Checa se steep = (dy > dx)================================
+   BCF     STATUS, C
+   MOVF    dx, W
+   SUBWF   dy, W
+   BTFSS   STATUS, C       ; Se dy > dx
+      GOTO  dxMQdy
+      
+   MOVLW   .1              ; steep = 1 (true)
+   MOVWF   steep
+   GOTO    steepTrue
+   
+   dxMQdy:
+      CLRF steep           ; steep = 0 (false)
+      GOTO checarX
+   ;============================================================= 
+ 
+   inverterDy
+      COMF    dy, F           
+      INCF    dy, F
+      RETURN
+   inverterDx
+      COMF    dx, F           
+      INCF    dx, F
+      RETURN
+      
+   steepTrue
+      ; Troca x0 e y0
+      MOVF    X0  , W
+      MOVWF   temp
+      MOVF    Y0  , W
+      MOVWF   X0
+      MOVF    temp, W
+      MOVWF   Y0
+      
+      ; Troca x1 e y1
+      MOVF    X1  , W
+      MOVWF   temp
+      MOVF    Y1  , W
+      MOVWF   X1
+      MOVF    temp, W
+      MOVWF   Y1
+      
+   checarX
+      ; Se x0 > x1, trocar (x0, y0) e (x1, y1)============
+      BCF     STATUS, C
+      MOVF    X0, W
+      SUBWF   X1, W
+      BTFSC   STATUS, C       ; Se x0 > x1, trocar
+	 GOTO x1MQx0
+
+      ; Troca x0 e x1
+      MOVF    X0  , W
+      MOVWF   temp
+      MOVF    X1  , W
+      MOVWF   X0
+      MOVF    temp, W
+      MOVWF   X1
+
+      ; Troca y0 e y1
+      MOVF    Y0  , W
+      MOVWF   temp
+      MOVF    Y1  , W
+      MOVWF   Y0
+      MOVF    temp, W
+      MOVWF   Y1
+      ;===================================================
+      
+   x1MQx0
+      MOVF    dx, W
+      MOVWF   err
+      RRF     err, F  ; err = dx / 2
+
+      ; Define ystep
+      MOVF    Y0, W
+      SUBWF   Y1, W
+      BTFSC   STATUS, C
+	 GOTO y1MQy0
+	 
+      MOVLW   0xFF
+      MOVWF   ystep
+      GOTO    loopDesenhoLinha
+
+      y1MQy0:
+	 MOVLW   .1
+	 MOVWF   ystep
+
+loopDesenhoLinha
+   MOVF    X0, W
+   SUBWF   X1, W
+   BTFSS   STATUS, C         ; x0 > x1?
+      GOTO fimDesenhoLinha   ; Se x0 > x1 para o loop
+
+   ; Se steep, desenha (y0, x0), senão desenha (x0, y0)
+   BCF     STATUS, Z
+   MOVF    steep , W
+   BTFSC   STATUS, Z
+      GOTO desenharXY        ; Se steep = 0 (false)
+      GOTO desenharYX
+
+desenharXY
+    CALL  desenharPixel
+    GOTO  pulo
+
+desenharYX
+   MOVF  X0, W
+   MOVWF temp_x
+   MOVF  Y0, W
+   MOVWF temp_y
+
+   MOVF temp_y, W
+   MOVWF X0
+   MOVF temp_x, W
+   MOVWF Y0
+
+   CALL  desenharPixel
+
+   MOVF temp_x, W
+   MOVWF X0
+   MOVF temp_y, W
+   MOVWF Y0
+
+pulo
+   ; Atualiza err e y0
+   MOVF    dy , W
+   SUBWF   err, F
+
+   BTFSS   err, 7
+      GOTO pularYstep
+      
+   
+   MOVF    ystep, W
+   ADDWF   Y0   , F ; Incrementa y0 de acordo com ystep
+   
+   MOVF    dx , W
+   ADDWF   err, F   ; Adiciona dx ao erro
+
+pularYstep
+    ; Incrementa x0
+    INCF    X0, F
+    GOTO    loopDesenhoLinha
+
+fimDesenhoLinha
+    RETURN
    
 delay130ms:
    MOVLW 0X02
