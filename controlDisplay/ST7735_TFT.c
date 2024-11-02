@@ -349,6 +349,7 @@ void drawFastHLine(unsigned short x, unsigned short y, unsigned short w, unsigne
   }
   TFT_CS = 1;
 }
+
 void drawCircle(signed int x0, signed int y0, signed int r, unsigned int color) {
   signed int f, ddF_x, ddF_y, x, y;
   f = 1 - r, ddF_x = 1, ddF_y = -2 * r, x = 0, y = r;
@@ -356,6 +357,7 @@ void drawCircle(signed int x0, signed int y0, signed int r, unsigned int color) 
   drawPixel(x0  , y0 - r, color);
   drawPixel(x0+r, y0    , color);
   drawPixel(x0-r, y0    , color);
+
   while (x < y) {
     if (f >= 0) {
       y--;
@@ -365,6 +367,7 @@ void drawCircle(signed int x0, signed int y0, signed int r, unsigned int color) 
     x++;
     ddF_x += 2;
     f += ddF_x;
+    
     drawPixel(x0 + x, y0 + y, color);
     drawPixel(x0 - x, y0 + y, color);
     drawPixel(x0 + x, y0 - y, color);
