@@ -16,21 +16,27 @@
 ; VARIABLES
 ;====================================================================
 CBLOCK  0x20           
-   count1
+      count1
    err
    steep
    ystep
    temp
    X0
    X0old
+   X0tri
    X1
    X1old
+   X1tri
+   X2tri
    dx
    temp_x
    Y0
    Y0old
+   Y0tri
    Y1
    Y1old
+   Y1tri
+   Y2tri
    dy
    temp_y
    Altura
@@ -105,16 +111,14 @@ definicaoVariaveis:
    MOVLW .0
    MOVWF X0
    MOVWF X0old
-   
-   MOVLW .65
+   MOVLW .80
    MOVWF Y0
    MOVWF Y0old
    
-   MOVLW .131
+   MOVLW .50
    MOVWF X1
    MOVWF X1old
-   
-   MOVLW .1
+   MOVLW .40
    MOVWF Y1
    MOVWF Y1old
    
@@ -127,12 +131,47 @@ definicaoVariaveis:
    MOVWF Altura
    MOVWF AlturaOld
    
+   ;Parâmetros para o desenho dos  três pontos de um triângulo
+   ;0:0 0:80 50:40
+   MOVLW .30
+   MOVWF X0tri
+   MOVLW .50
+   MOVWF Y0tri
+   
+   MOVLW .70
+   MOVWF X1tri
+   MOVLW .10
+   MOVWF Y1tri
+   
+   MOVLW .110
+   MOVWF X2tri
+   MOVLW .50
+   MOVWF Y2tri
+   
    ;Parâmetro para Raio da circunferência 
    MOVLW .10
    MOVWF Raio
    
 chamadaFuncoes
-   CALL desenharLinha
+   CALL desenharTriangulo
+   
+   MOVLW .30
+   MOVWF X0
+   MOVLW .50
+   MOVWF Y0
+   CALL desenharPixel
+   MOVLW .70
+   MOVWF X0
+   MOVLW .20
+   MOVWF Y0
+   CALL desenharPixel
+   MOVLW .110
+   MOVWF X0
+   MOVLW .50
+   MOVWF Y0
+   CALL desenharPixel
+
+   
 
 loop
    CLRWDT
@@ -141,11 +180,9 @@ loop
 desenharPixel:  
    MOVF  X0, W
    MOVWF X1
-   ;INCF  X1, F
    
    MOVF  Y0, W
    MOVWF Y1
-   ;INCF  Y1, F
    
    CALL definirIntervalo
    
@@ -164,30 +201,31 @@ desenharPixel:
    RETURN
 
 desenharRetanguloPreenchido:
-   MOVF X0, W
+desenharReta:
+   MOVF  X0     , W
    ADDWF Largura, F
-   MOVF Y0, W
-   ADDWF Altura, F
+   MOVF  Y0     , W
+   ADDWF Altura , F
    LoopPreenchimentoLinha
       CLRWDT
-      BCF   STATUS  , Z
-      MOVF  X0      , W
-      SUBWF Largura , W
+      BCF   STATUS , Z
+      MOVF  X0     , W
+      SUBWF Largura, W
 
-      BTFSC STATUS, Z  
+      BTFSC STATUS , Z  
 	 GOTO FimLoopPreenchimentoLinha
 	 CALL desenharPixel
       INCF X0, F
       GOTO LoopPreenchimentoLinha
       
    FimLoopPreenchimentoLinha
-      INCF Y0, F
+      INCF  Y0   , F
       MOVF  X0old, W
       MOVWF X0
       
-      BCF   STATUS , Z
-      MOVF  Y0     , W
-      SUBWF Altura , W
+      BCF   STATUS, Z
+      MOVF  Y0    , W
+      SUBWF Altura, W
 
       BTFSC STATUS, Z  
 	 GOTO FimLoopPreenchimento
@@ -433,68 +471,71 @@ desenharCircunferencia:
 
       RETURN
       
-definirIntervalo:
-   MOVLW 0X2A       ; Comando CASET Column Address Set
-   CALL enviarComando
-   CALL microDelay
-   MOVLW 0X00
-   CALL enviarDados
-   MOVF X0, W
-   CALL enviarDados
-   MOVLW 0X00
-   CALL enviarDados
-   MOVF X1, W       
-   CALL enviarDados
-   
-   MOVLW 0X2B       ; Comando RASET Row Address Set
-   CALL enviarComando
-   CALL microDelay
-   MOVLW 0X00
-   CALL enviarDados
-   MOVF Y0, W
-   CALL enviarDados
-   MOVLW 0X00
-   CALL enviarDados
-   MOVF Y1, W      
-   CALL enviarDados
-   
-   MOVLW 0X2C      ; Comando RAMWR Memory Write
-   CALL enviarComando
-   CALL microDelay
-   RETURN
-   
+desenharTriangulo:
+    MOVF  X0tri, W
+    MOVWF X0
+    MOVF  Y0tri, W
+    MOVWF Y0
+    MOVF  X1tri, W
+    MOVWF X1
+    MOVF  Y1tri, W
+    MOVWF Y1
+    CALL desenharLinha
+    
+    MOVF  X2tri, W
+    MOVWF X0
+    MOVF  Y2tri, W
+    MOVWF Y0
+    MOVF  X1tri, W
+    MOVWF X1
+    MOVF  Y1tri, W
+    MOVWF Y1
+    CALL desenharLinha
+    
+    MOVF  X0tri, W
+    MOVWF X0
+    MOVF  Y0tri, W
+    MOVWF Y0
+    MOVF  X0tri, W
+    SUBWF X2tri, W
+    MOVWF Largura
+    MOVLW .1
+    MOVWF Altura
+    
+    CALL desenharReta
+    
+    RETURN
+    
+     
 
 
-; Variáveis Temporárias
+
+desenharLinha:
 ; steep  - Flag para inclinação da linha
 ; dx     - Delta x
 ; dy     - Delta y
 ; err    - Erro inicial
 ; ystep  - Passo para y
-; Variables should be stored in predefined locations in RAM
 
-; Initialization
-desenharLinha:
    ; Calcula dy = abs(y1 - y0) e dx = abs(x1 - x0)=======================
-   BCF     STATUS, C
-   MOVF    Y0, W
-   SUBWF   Y1, W            ; W = y1 - y0
-   MOVWF   dy
-   BTFSC   STATUS, C        ; Se y1 >= y0, não precisamos inverter
+   BCF   STATUS, C
+   MOVF  Y0    , W
+   SUBWF Y1    , W          ; W = y1 - y0
+   MOVWF dy
+   BTFSC STATUS, C          ; Se y1 >= y0, não precisamos inverter
       NOP                   ; dy = abs(y1 - y0)
-   BTFSS   STATUS, C
+   BTFSS STATUS, C
       CALL inverterDy	    ; Caso contrário, inverter o sinal
       
-   BCF     STATUS, C
-   MOVF    X0, W
-   SUBWF   X1, W            ; W = x1 - x0
-   MOVWF   dx		    ; dx = abs(x1 - x0)
-   BTFSC   STATUS, C
+   BCF   STATUS, C
+   MOVF  X0    , W
+   SUBWF X1    , W          ; W = x1 - x0
+   MOVWF dx		    ; dx = abs(x1 - x0)
+   BTFSC STATUS, C
       NOP
    BTFSS   STATUS, C
       CALL inverterDx
    ;===========================================================
-   
    ; Checa se steep = (dy > dx)================================
    BCF     STATUS, C
    MOVF    dx, W
@@ -506,21 +547,20 @@ desenharLinha:
    MOVWF   steep
    GOTO    steepTrue
    
-   dxMQdy:
+   dxMQdy
       CLRF steep           ; steep = 0 (false)
       GOTO checarX
-   ;============================================================= 
- 
-   inverterDy
-      COMF    dy, F           
-      INCF    dy, F
-      RETURN
-   inverterDx
-      COMF    dx, F           
-      INCF    dx, F
-      RETURN
+    ;============================================================= 
+    inverterDy
+	COMF    dy, F           
+	INCF    dy, F
+	RETURN
+    inverterDx
+	COMF    dx, F           
+	INCF    dx, F
+	RETURN
       
-   steepTrue
+    steepTrue;==================================================================
       ; Troca x0 e y0
       MOVF    X0  , W
       MOVWF   temp
@@ -536,107 +576,137 @@ desenharLinha:
       MOVWF   X1
       MOVF    temp, W
       MOVWF   Y1
+    ;===========================================================================  
+    checarX;====================================================================
+	; Se x0 > x1, trocar (x0, y0) e (x1, y1)
+	BCF     STATUS, C
+	MOVF    X0, W
+	SUBWF   X1, W
+	BTFSC   STATUS, C ; Se x0 > x1, trocar
+	   GOTO x1MQx0
+	
+	MOVF    X0  , W   ; Troca x0 e x1
+	MOVWF   temp
+	MOVF    X1  , W
+	MOVWF   X0
+	MOVF    temp, W
+	MOVWF   X1
+
+	MOVF    Y0  , W   ; Troca y0 e y1
+	MOVWF   temp
+	MOVF    Y1  , W
+	MOVWF   Y0
+	MOVF    temp, W
+	MOVWF   Y1
+    ;===========================================================================
       
-   checarX
-      ; Se x0 > x1, trocar (x0, y0) e (x1, y1)============
-      BCF     STATUS, C
-      MOVF    X0, W
-      SUBWF   X1, W
-      BTFSC   STATUS, C       ; Se x0 > x1, trocar
-	 GOTO x1MQx0
+    x1MQx0;=====================================================================
+	MOVF    dx, W
+	MOVWF   err
+	RRF     err, F  ; err = dx / 2
 
-      ; Troca x0 e x1
-      MOVF    X0  , W
-      MOVWF   temp
-      MOVF    X1  , W
-      MOVWF   X0
-      MOVF    temp, W
-      MOVWF   X1
+	; Define ystep
+	MOVF    Y0, W
+	SUBWF   Y1, W
+	BTFSC   STATUS, C
+	   GOTO y1MQy0  ; y1 > y0
 
-      ; Troca y0 e y1
-      MOVF    Y0  , W
-      MOVWF   temp
-      MOVF    Y1  , W
-      MOVWF   Y0
-      MOVF    temp, W
-      MOVWF   Y1
-      ;===================================================
-      
-   x1MQx0
-      MOVF    dx, W
-      MOVWF   err
-      RRF     err, F  ; err = dx / 2
+	MOVLW   0xFF    ;-1 
+	MOVWF   ystep
+	GOTO    loopDesenhoLinha
 
-      ; Define ystep
-      MOVF    Y0, W
-      SUBWF   Y1, W
-      BTFSC   STATUS, C
-	 GOTO y1MQy0
-	 
-      MOVLW   0xFF
-      MOVWF   ystep
-      GOTO    loopDesenhoLinha
+	y1MQy0
+	   MOVLW   .1
+	   MOVWF   ystep
+    ;===========================================================================
+loopDesenhoLinha;===============================================================
+    MOVF    X0, W
+    SUBWF   X1, W
+    BTFSS   STATUS, C         ; x0 > x1?
+       GOTO fimDesenhoLinha   ; Se x0 > x1 para o loop
 
-      y1MQy0:
-	 MOVLW   .1
-	 MOVWF   ystep
+    ; Se steep == true, desenha (y0, x0), senão desenha (x0, y0)
+    BCF     STATUS, Z
+    MOVF    steep , W
+    BTFSC   STATUS, Z
+       GOTO desenharXY        ; Se steep = 0 (false)
+       GOTO desenharYX
 
-loopDesenhoLinha
-   MOVF    X0, W
-   SUBWF   X1, W
-   BTFSS   STATUS, C         ; x0 > x1?
-      GOTO fimDesenhoLinha   ; Se x0 > x1 para o loop
+    desenharXY
+	CALL  desenharPixel
+	GOTO  pulo
 
-   ; Se steep, desenha (y0, x0), senão desenha (x0, y0)
-   BCF     STATUS, Z
-   MOVF    steep , W
-   BTFSC   STATUS, Z
-      GOTO desenharXY        ; Se steep = 0 (false)
-      GOTO desenharYX
+    desenharYX
+	MOVF  X0    , W       ; Troca a posição de X0 com Y0
+	MOVWF temp_x
+	MOVF  Y0    , W
+	MOVWF temp_y
 
-desenharXY
-    CALL  desenharPixel
-    GOTO  pulo
+	MOVF  temp_y, W
+	MOVWF X0
+	MOVF  temp_x, W
+	MOVWF Y0
 
-desenharYX
-   MOVF  X0, W
-   MOVWF temp_x
-   MOVF  Y0, W
-   MOVWF temp_y
+	CALL  desenharPixel
 
-   MOVF temp_y, W
-   MOVWF X0
-   MOVF temp_x, W
-   MOVWF Y0
+	MOVF  temp_x, W
+	MOVWF X0
+	MOVF  temp_y, W
+	MOVWF Y0
 
-   CALL  desenharPixel
+    pulo
+	; Atualiza err e y0
+	MOVF  dy , W
+	SUBWF err, F
 
-   MOVF temp_x, W
-   MOVWF X0
-   MOVF temp_y, W
-   MOVWF Y0
+	BTFSS err, 7   ; err > 0? 
+	   GOTO pularYstep
 
-pulo
-   ; Atualiza err e y0
-   MOVF    dy , W
-   SUBWF   err, F
+	MOVF  ystep, W
+	ADDWF Y0   , F ; Incrementa y0 de acordo com ystep
 
-   BTFSS   err, 7
-      GOTO pularYstep
-      
-   
-   MOVF    ystep, W
-   ADDWF   Y0   , F ; Incrementa y0 de acordo com ystep
-   
-   MOVF    dx , W
-   ADDWF   err, F   ; Adiciona dx ao erro
+	MOVF  dx , W
+	ADDWF err, F   ; Adiciona dx ao erro
 
-pularYstep
-    ; Incrementa x0
-    INCF    X0, F
-    GOTO    loopDesenhoLinha
-
+    pularYstep
+	INCF X0, F     ; Incrementa x0
+	GOTO loopDesenhoLinha
+;===============================================================================
 fimDesenhoLinha
+    MOVF  X0old, W
+    MOVWF X0
+    MOVF  Y0old, W
+    MOVWF Y0
+    RETURN
+    
+definirIntervalo:
+    MOVLW 0X2A       ; Comando CASET Column Address Set
+    CALL  enviarComando
+    CALL  microDelay
+    MOVLW 0X00
+    CALL  enviarDados
+    MOVF  X0, W
+    CALL  enviarDados
+    MOVLW 0X00
+    CALL  enviarDados
+    MOVF  X1, W       
+    CALL  enviarDados
+
+    MOVLW 0X2B       ; Comando RASET Row Address Set
+    CALL  enviarComando
+    CALL  microDelay
+    MOVLW 0X00
+    CALL  enviarDados
+    MOVF  Y0, W
+    CALL  enviarDados
+    MOVLW 0X00
+    CALL  enviarDados
+    MOVF  Y1, W      
+    CALL  enviarDados
+
+    MOVLW 0X2C      ; Comando RAMWR Memory Write
+    CALL  enviarComando
+    CALL  microDelay
     RETURN
    
 delay130ms:
