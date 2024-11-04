@@ -30,6 +30,7 @@ CBLOCK  0x20
    X2tri
    dx
    temp_x
+   temp_x1
    Y0
    Y0old
    Y0tri
@@ -100,84 +101,114 @@ beginDisplay
 
 definicaoVariaveis:
    ; Variáveis para mudança de cor RGB
-   MOVLW .0       ; VERMELHO
-   MOVWF COR1
-   MOVLW .0       ; VERDE
-   MOVWF COR2
-   MOVLW .0       ; AZUL
-   MOVWF COR3
+   MOVLW .0       
+   MOVWF COR1 ; VERMELHO
+   MOVLW .0       
+   MOVWF COR2 ; VERDE
+   MOVLW .0    
+   MOVWF COR3 ; AZUL
    
    ;Parâmetros para posição inical e final do desenho
-   MOVLW .0
+   MOVLW .50
    MOVWF X0
    MOVWF X0old
    MOVLW .80
    MOVWF Y0
    MOVWF Y0old
    
-   MOVLW .50
+   MOVLW .131
    MOVWF X1
    MOVWF X1old
-   MOVLW .40
+   MOVLW .161
    MOVWF Y1
    MOVWF Y1old
    
    ;Parâmetros para largura (L) e altura (H) do retângulo desenhado
-   MOVLW .1
+   MOVLW .132
    MOVWF Largura
    MOVWF LarguraOld
    
-   MOVLW .50
+   MOVLW .162
    MOVWF Altura
    MOVWF AlturaOld
    
    ;Parâmetros para o desenho dos  três pontos de um triângulo
    ;0:0 0:80 50:40
-   MOVLW .30
+   MOVLW .0
    MOVWF X0tri
-   MOVLW .50
+   MOVLW .0
    MOVWF Y0tri
    
-   MOVLW .70
+   MOVLW .0
    MOVWF X1tri
-   MOVLW .10
+   MOVLW .0
    MOVWF Y1tri
    
-   MOVLW .110
+   MOVLW .0
    MOVWF X2tri
-   MOVLW .50
+   MOVLW .0
    MOVWF Y2tri
    
    ;Parâmetro para Raio da circunferência 
-   MOVLW .10
+   MOVLW .0
    MOVWF Raio
    
-chamadaFuncoes
-   CALL desenharTriangulo
-   
-   MOVLW .30
-   MOVWF X0
-   MOVLW .50
-   MOVWF Y0
-   CALL desenharPixel
-   MOVLW .70
-   MOVWF X0
-   MOVLW .20
-   MOVWF Y0
-   CALL desenharPixel
-   MOVLW .110
-   MOVWF X0
-   MOVLW .50
-   MOVWF Y0
-   CALL desenharPixel
+chamadaFuncoes:
+    
+;    CALL desenharRetanguloPreenchido 
+    CALL desenharLinha
+    
+    MOVLW .20
+    MOVWF X0
+    MOVLW .150
+    MOVWF Y0
+    CALL desenharPixel
+    
+;    MOVLW .40
+;    MOVWF X0
+;    MOVLW .40
+;    MOVWF Y0
+;    MOVLW .20
+;    MOVWF X1
+;    MOVLW .20
+;    MOVWF Y1
+;    
+;    CALL desenharLinha
+    
+    
+    MOVLW .0       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .0       
+    MOVWF COR2 ; VERDE
+    MOVLW .0    
+    MOVWF COR3 ; AZUL
 
-   
+    
+    
+
+ 
+;   MOVLW .30
+;   MOVWF X0
+;   MOVLW .50
+;   MOVWF Y0
+;   CALL desenharPixel
+;   MOVLW .70
+;   MOVWF X0
+;   MOVLW .20
+;   MOVWF Y0
+;   CALL desenharPixel
+;   MOVLW .110
+;   MOVWF X0
+;   MOVLW .50
+;   MOVWF Y0
+;   CALL desenharPixel
 
 loop
    CLRWDT
    GOTO  loop
    
-desenharPixel:  
+desenharPixel:
+    
    MOVF  X0, W
    MOVWF X1
    
@@ -185,11 +216,12 @@ desenharPixel:
    MOVWF Y1
    
    CALL definirIntervalo
-   
+
    MOVF  X1old, W 
    MOVWF X1
    MOVF  Y1old, W
    MOVWF Y1
+   
    
    MOVF COR1, W
    CALL enviarDados
@@ -203,24 +235,25 @@ desenharPixel:
 desenharRetanguloPreenchido:
 desenharReta:
    MOVF  X0     , W
+   MOVWF temp
    ADDWF Largura, F
    MOVF  Y0     , W
    ADDWF Altura , F
    LoopPreenchimentoLinha
-      CLRWDT
-      BCF   STATUS , Z
-      MOVF  X0     , W
-      SUBWF Largura, W
+	CLRWDT
+	BCF   STATUS , Z
+	MOVF  X0     , W
+	SUBWF Largura, W
 
-      BTFSC STATUS , Z  
-	 GOTO FimLoopPreenchimentoLinha
-	 CALL desenharPixel
-      INCF X0, F
-      GOTO LoopPreenchimentoLinha
-      
+	BTFSC STATUS , Z  
+	   GOTO FimLoopPreenchimentoLinha
+	   CALL desenharPixel
+	INCF X0, F
+	GOTO LoopPreenchimentoLinha
+
    FimLoopPreenchimentoLinha
-      INCF  Y0   , F
-      MOVF  X0old, W
+      INCF  Y0  , F
+      MOVF  temp, W
       MOVWF X0
       
       BCF   STATUS, Z
@@ -241,21 +274,37 @@ desenharReta:
       MOVF  AlturaOld , W
       MOVWF Altura
       RETURN
+
+desenharRetangulo:
+    MOVLW .1
+    MOVWF Altura
+    CALL desenharReta
    
-enviarComando:
-   BCF STATUS, RP0    
-   BCF STATUS, RP1
-   BCF PORTB, 0      ; Definindo o envio de um comando
-   MOVWF SSPBUF      ; Coloca o comando definido no buffer de transmissão
-   RETURN
-   
-enviarDados:
-   BCF STATUS, RP0    
-   BCF STATUS, RP1
-   BSF PORTB, 0      
-   MOVWF SSPBUF
-   CALL microDelay
-   RETURN
+    MOVLW .1
+    MOVWF Largura
+    CALL  desenharReta
+    
+    MOVF  Largura, W
+    ADDWF X0, F
+    MOVLW .1
+    MOVWF Largura
+    CALL  desenharReta
+    
+    MOVF  X0old, W
+    MOVWF X0
+    MOVF  Altura, W
+    ADDWF Y0   , F
+    MOVLW .1
+    MOVWF Altura
+    INCF  Largura
+    CALL  desenharReta
+    
+    MOVF  X0old, W
+    MOVWF X0
+    MOVF  Y0old, W
+    MOVWF Y0
+    RETURN
+
    
 ; Variáveis temporárias e parâmetros
 ; X0: posição X do centro do círculo
@@ -368,7 +417,9 @@ desenharCircunferencia:
        MOVWF Y0
        
        MOVF  Raio, W
-       SUBWF Y0  , F 
+       SUBWF Y0  , W
+       MOVWF Y0 
+       MOVWF temp_y
        CALL  desenharPixel           ; (X0, Y0 - Raio)
 
        MOVF  Y0old, W
@@ -381,49 +432,90 @@ desenharCircunferencia:
        MOVF  X0old, W
        MOVWF X0  
        
-       MOVF  Raio , W
-       SUBWF X0   , F
-       CALL  desenharPixel           ; (X0 - Raio, Y0)
+	MOVF  Raio , W
+	SUBWF X0   , F
+	CALL  desenharPixel           ; (X0 - Raio, Y0)
+	
+	MOVLW .1
+	MOVWF Altura
+	MOVF Raio, W
+	MOVWF Largura
+	ADDWF Largura, F
+	CALL desenharReta
 
-       MOVF  X0old, W
-       MOVWF X0
+	MOVF  X0old, W
+	MOVWF X0
+       
+	MOVF temp_y, W
+	MOVWF Y0
+	MOVLW .1
+	MOVWF Largura
+	MOVF Raio, W
+	MOVWF Altura
+	ADDWF Altura, F
+	CALL desenharReta
        
        RETURN
 
    ; Função para desenhar os 8 pontos simétricos
    desenharPixelSimetricos
-      MOVF  X0, W
-      MOVWF X0old
-      MOVF  Y0, W
-      MOVWF Y0old
+	MOVF  X , W	  	    
+	ADDWF X0, W		    ; X0 = X0 + X
+	MOVWF X0
+	MOVWF temp_x
+	MOVF  Y , W
+	ADDWF Y0, F		    ; Y0 = Y0 + Y
+	CALL  desenharPixel         ; Desenha o pixel em (X0 + X, Y0 + Y)
       
-      MOVF  X , W	  	    
-      ADDWF X0, F		    ; X0 = X0 + X
-      MOVF  Y , W
-      ADDWF Y0, F		    ; Y0 = Y0 + Y
-      CALL  desenharPixel           ; Desenha o pixel em (X0 + X, Y0 + Y)
+	MOVF  X0old, W
+	MOVWF X0
+
+	MOVF  X , W
+	SUBWF X0, W		    ; X0 = X0 - X    
+	MOVWF X0
+	MOVWF temp_x1
+	CALL desenharPixel            ; Desenha o pixel em (X0 - X, Y0 + Y)
+
+	MOVF  X0old, W
+	MOVWF X0
+	MOVF  Y0old, W
+	MOVWF Y0
+
+	MOVF  X , W
+	ADDWF X0, F		    ; X0 = X0 + X
+	MOVF  Y , W		    
+	SUBWF Y0, W		    ; Y0 = Y0 - y
+	MOVWF Y0
+	MOVWF temp_y
+	CALL desenharPixel            ; Desenha o pixel em (X0 + X, Y0 - Y)
+      
+	MOVF temp_x, W
+	MOVWF X0
+	MOVF temp_y, W
+	MOVWF Y0
+	MOVLW .1
+	MOVWF Largura
+	MOVF Y, W
+	MOVWF Altura
+	ADDWF Altura, F
+	CALL desenharReta
+	
+	MOVF temp_x1, W
+	MOVWF X0
+	MOVF temp_y, W
+	MOVWF Y0
+	MOVLW .1
+	MOVWF Largura
+	MOVF Y, W
+	MOVWF Altura
+	ADDWF Altura, F
+	CALL desenharReta
       
       MOVF  X0old, W
       MOVWF X0
 
-      MOVF  X , W
-      SUBWF X0, F		    ; X0 = X0 - X                     
-      CALL desenharPixel            ; Desenha o pixel em (X0 - X, Y0 + Y)
-      
-      MOVF  X0old, W
-      MOVWF X0
-      MOVF  Y0old, W
+      MOVF temp_y, W
       MOVWF Y0
-
-      MOVF  X , W
-      ADDWF X0, F		    ; X0 = X0 + X
-      MOVF  Y , W		    
-      SUBWF Y0, F		    ; Y0 = Y0 - y
-      CALL desenharPixel            ; Desenha o pixel em (X0 + X, Y0 - Y)
-      
-      MOVF  X0old, W
-      MOVWF X0
-
       MOVF  X , W
       SUBWF X0, F		    ; X0 = X0 - X
       CALL  desenharPixel           ; Desenha o pixel em (X0 - X, Y0 - Y)
@@ -436,14 +528,18 @@ desenharCircunferencia:
       MOVF  Y , W
       ADDWF X0, F		    ; X0 = X0 + Y
       MOVF  X , W
-      ADDWF Y0, F		    ; Y0 = Y0 + X
+      ADDWF Y0, W		    ; Y0 = Y0 + X
+      MOVWF Y0
+      MOVWF temp_x1
       CALL  desenharPixel           ; Desenha o pixel em (X0 + Y, Y0 + X)
       
       MOVF  X0old, W
       MOVWF X0
 
       MOVF  Y , W
-      SUBWF X0, F		    ; X0 = X0 - Y
+      SUBWF X0, W		    ; X0 = X0 - Y
+      MOVWF X0
+      MOVWF temp_x
       CALL  desenharPixel           ; Desenha o pixel em (X0 - Y, Y0 + X)
       
       MOVF  X0old, W
@@ -451,14 +547,40 @@ desenharCircunferencia:
       MOVF  Y0old, W
       MOVWF Y0
 
-      MOVF  Y , W
-      ADDWF X0, F     		    ; X0 = X0 + Y
-      MOVF  X , W		    
-      SUBWF Y0, F		    ; Y0 = Y0 - X
-      CALL  desenharPixel           ; Desenha o pixel em (X0 + Y, Y0 - X)
+	MOVF  Y , W
+	ADDWF X0, F     		    ; X0 = X0 + Y
+	MOVF  X , W		    
+	SUBWF Y0, W		    ; Y0 = Y0 - X
+	MOVWF Y0
+	MOVWF temp_y
+	CALL  desenharPixel           ; Desenha o pixel em (X0 + Y, Y0 - X)
       
-      MOVF  X0old, W
-      MOVWF X0
+	MOVF temp_x, W
+	MOVWF X0
+	MOVF temp_y, W
+	MOVWF Y0
+	MOVLW .1
+	MOVWF Altura
+	MOVF Y, W
+	MOVWF Largura
+	ADDWF Largura, F
+	CALL desenharReta
+	
+	MOVF temp_x, W
+	MOVWF X0
+	MOVF temp_x1, W
+	MOVWF Y0
+	MOVLW .1
+	MOVWF Altura
+	MOVF Y, W
+	MOVWF Largura
+	ADDWF Largura, F
+	CALL desenharReta
+      
+	MOVF temp_y, W
+	MOVWF Y0
+	MOVF  X0old, W
+	MOVWF X0
 
       MOVF  Y , W
       SUBWF X0, F		    ; X0 = X0 - Y
@@ -660,7 +782,7 @@ loopDesenhoLinha;===============================================================
 	SUBWF err, F
 
 	BTFSS err, 7   ; err > 0? 
-	   GOTO pularYstep
+	   GOTO pularYstep ; Se err >= 0
 
 	MOVF  ystep, W
 	ADDWF Y0   , F ; Incrementa y0 de acordo com ystep
@@ -708,6 +830,21 @@ definirIntervalo:
     CALL  enviarComando
     CALL  microDelay
     RETURN
+    
+enviarComando:
+   BCF STATUS, RP0    
+   BCF STATUS, RP1
+   BCF PORTB, 0      ; Definindo o envio de um comando
+   MOVWF SSPBUF      ; Coloca o comando definido no buffer de transmissão
+   RETURN
+   
+enviarDados:
+   BCF STATUS, RP0    
+   BCF STATUS, RP1
+   BSF PORTB, 0      
+   MOVWF SSPBUF
+   CALL microDelay
+   RETURN
    
 delay130ms:
    MOVLW 0X02
