@@ -15,45 +15,48 @@
 ;====================================================================
 ; VARIABLES
 ;====================================================================
-CBLOCK  0x20           
-      count1
-   err
-   steep
-   ystep
-   temp
-   X0
-   X0old
-   X0tri
-   X1
-   X1old
-   X1tri
-   X2tri
-   dx
-   temp_x
-   temp_x1
-   Y0
-   Y0old
-   Y0tri
-   Y1
-   Y1old
-   Y1tri
-   Y2tri
-   dy
-   temp_y
-   Altura
-   AlturaOld
-   Largura
-   LarguraOld
-   eF
-   ddF_x
-   ddF_y
-   X
-   Y
-   Raio
-   RaioOld
-   COR1
-   COR2
-   COR3
+CBLOCK  0x20  
+    circPreenchido
+    count1  ; 0x20
+    err     ; 0x21
+    steep   ; 0x22
+    ystep   ; 0x23
+    temp    ; 0x24
+    X0      ; 0x25
+    X0old   ; 0x26
+    X0tri   ; 0x27
+    X1      ; 0x28
+    X1old   ; 0x29
+    X1tri   ; 0x2A
+    X2tri   ; 0x2B
+    dx      ; 0x2C
+    temp_x  ; 0x2D
+    temp_x1 ; 0x2E
+    tempPixelX ; 0x2F
+    Y0      
+    Y0old   ; 0x30
+    Y0tri ; 0x21
+    Y1 ; 0x21
+    Y1old ; 0x21
+    Y1tri ; 0x21
+    Y2tri ; 0x21
+    dy ; 0x21
+    temp_y ; 0x21
+    tempPixelY ; 0x2F
+    Altura ; 0x21 
+    AlturaOld ; 0x21
+    Largura ; 0x21
+    LarguraOld ; 0x21
+    eF ; 0x21
+    ddF_x ; 0 21
+    ddF_y ; 0x21
+    X ; 0x21
+    Y ; 0x21
+    Raio ; 0x21
+    RaioOld ; 0x21
+    COR1 ; 0x21
+    COR2 ; 0x21
+    COR3 ; 0x21
 ENDC
 ;====================================================================
 ; RESET and INTERRUPT VECTORS
@@ -109,10 +112,10 @@ definicaoVariaveis:
    MOVWF COR3 ; AZUL
    
    ;Parâmetros para posição inical e final do desenho
-   MOVLW .50
+   MOVLW .0
    MOVWF X0
    MOVWF X0old
-   MOVLW .80
+   MOVLW .0
    MOVWF Y0
    MOVWF Y0old
    
@@ -154,15 +157,273 @@ definicaoVariaveis:
    MOVWF Raio
    
 chamadaFuncoes:
+   MOVLW .100       
+   MOVWF COR1 ; VERMELHO
+   MOVLW .100       
+   MOVWF COR2 ; VERDE
+   MOVLW .100    
+   MOVWF COR3 ; AZUL
+   MOVLW .0
+   MOVWF X0
+   MOVLW .0
+   MOVWF Y0
+   MOVLW .132
+   MOVWF Largura
+   MOVLW .162
+   MOVWF Altura
+   CALL desenharRetanguloPreenchido
+   
+   MOVLW .0       
+   MOVWF COR1 ; VERMELHO
+   MOVLW .0       
+   MOVWF COR2 ; VERDE
+   MOVLW .0    
+   MOVWF COR3 ; AZUL
+   MOVLW .0
+   MOVWF X0
+   MOVLW .0
+   MOVWF Y0 
+   MOVLW .131
+   MOVWF X1
+   MOVLW .161
+   MOVWF Y1 
+   CALL desenharLinha
     
-;    CALL desenharRetanguloPreenchido 
+    MOVLW .0
+    MOVWF X0
+    MOVLW .161
+    MOVWF Y0
+    MOVLW .131
+    MOVWF X1
+    MOVLW .0
+    MOVWF Y1
     CALL desenharLinha
     
+    MOVLW .255    
+    MOVWF COR3 ; AZUL
+    MOVLW .57
+    MOVWF X0
+    MOVLW .0
+    MOVWF Y0
     MOVLW .20
+    MOVWF Largura
+    MOVLW .20
+    MOVWF Altura
+    CALL desenharRetanguloPreenchido
+    
+    MOVLW .255       
+    MOVWF COR2 ; VERDE
+    MOVLW .0    
+    MOVWF COR3 ; AZUL
+    MOVLW .57
+    MOVWF X0
+    MOVLW .20
+    MOVWF Y0
+    MOVLW .20
+    MOVWF Largura
+    MOVLW .20
+    MOVWF Altura
+    CALL desenharRetanguloPreenchido
+    
+    MOVLW .255       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .0       
+    MOVWF COR2 ; VERDE
+    MOVLW .0    
+    MOVWF COR3 ; AZUL
+    MOVLW .57
+    MOVWF X0
+    MOVLW .40
+    MOVWF Y0
+    MOVLW .20
+    MOVWF Largura
+    MOVLW .20
+    MOVWF Altura
+    CALL desenharRetanguloPreenchido
+    
+    MOVLW .0       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .125       
+    MOVWF COR2 ; VERDE
+    MOVLW .255    
+    MOVWF COR3 ; AZUL
+    MOVLW .20
+    MOVWF X0
+    MOVLW .60
+    MOVWF Y0
+    MOVLW .10
+    MOVWF Raio
+    MOVLW .1
+    MOVWF circPreenchido
+    CALL desenharCircunferencia
+    
+    MOVLW .125       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .255       
+    MOVWF COR2 ; VERDE
+    MOVLW .0    
+    MOVWF COR3 ; AZUL
+    MOVLW .20
+    MOVWF X0
+    MOVLW .82
+    MOVWF Y0
+    MOVLW .10
+    MOVWF Raio
+    MOVLW .0
+    MOVWF circPreenchido
+    CALL desenharCircunferencia
+    
+    MOVLW .255       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .0       
+    MOVWF COR2 ; VERDE
+    MOVLW .125    
+    MOVWF COR3 ; AZUL
+    MOVLW .20
+    MOVWF X0
+    MOVLW .104
+    MOVWF Y0
+    MOVLW .10
+    MOVWF Raio
+    MOVLW .1
+    MOVWF circPreenchido
+    CALL desenharCircunferencia
+    
+    MOVLW .0       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .150       
+    MOVWF COR2 ; VERDE
+    MOVLW .150    
+    MOVWF COR3 ; AZUL
+    MOVLW .100
+    MOVWF X0tri
+    MOVLW .60
+    MOVWF Y0tri
+    MOVLW .110
+    MOVWF X1tri
+    MOVLW .50
+    MOVWF Y1tri
+    MOVLW .120
+    MOVWF X2tri
+    MOVLW .60
+    MOVWF Y2tri
+    CALL desenharTriangulo
+    
+    MOVLW .150       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .150       
+    MOVWF COR2 ; VERDE
+    MOVLW .0    
+    MOVWF COR3 ; AZUL
+    MOVLW .90
+    MOVWF X0tri
+    MOVLW .80
+    MOVWF Y0tri
+    MOVLW .110
+    MOVWF X1tri
+    MOVLW .70
+    MOVWF Y1tri
+    MOVLW .130
+    MOVWF X2tri
+    MOVLW .80
+    MOVWF Y2tri
+    CALL desenharTriangulo
+    
+    MOVLW .150       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .0       
+    MOVWF COR2 ; VERDE
+    MOVLW .150    
+    MOVWF COR3 ; AZUL
+    MOVLW .90
+    MOVWF X0tri
+    MOVLW .110
+    MOVWF Y0tri
+    MOVLW .110
+    MOVWF X1tri
+    MOVLW .90
+    MOVWF Y1tri
+    MOVLW .130
+    MOVWF X2tri
+    MOVLW .110
+    MOVWF Y2tri
+    CALL desenharTriangulo
+    
+    
+    MOVLW .0       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .250      
+    MOVWF COR2 ; VERDE
+    MOVLW .50    
+    MOVWF COR3 ; AZUL
+    MOVLW .65
+    MOVWF X0
+    MOVLW .130
+    MOVWF Y0
+    CALL desenharPixel
+    
+    MOVLW .250       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .50      
+    MOVWF COR2 ; VERDE
+    MOVLW .0    
+    MOVWF COR3 ; AZUL
+    MOVLW .65
+    MOVWF X0
+    MOVLW .140
+    MOVWF Y0
+    CALL desenharPixel
+    
+    MOVLW .250       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .0      
+    MOVWF COR2 ; VERDE
+    MOVLW .50   
+    MOVWF COR3 ; AZUL
+    MOVLW .65
     MOVWF X0
     MOVLW .150
     MOVWF Y0
     CALL desenharPixel
+    
+    MOVLW .200       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .200      
+    MOVWF COR2 ; VERDE
+    MOVLW .200  
+    MOVWF COR3 ; AZUL
+    MOVLW .50
+    MOVWF X0
+    MOVLW .130
+    MOVWF Y0
+    MOVLW .1
+    MOVWF Largura
+    MOVLW .20
+    MOVWF Altura
+    CALL desenharReta
+    
+    MOVLW .100       
+    MOVWF COR1 ; VERMELHO
+    MOVLW .100      
+    MOVWF COR2 ; VERDE
+    MOVLW .200  
+    MOVWF COR3 ; AZUL
+    MOVLW .70
+    MOVWF X0
+    MOVLW .140
+    MOVWF Y0
+    MOVLW .20
+    MOVWF Largura
+    MOVLW .1
+    MOVWF Altura
+    CALL desenharReta
+    
+    
+    
+    
+    
+  
+  
     
 ;    MOVLW .40
 ;    MOVWF X0
@@ -208,29 +469,37 @@ loop
    GOTO  loop
    
 desenharPixel:
+    MOVF X1, W
+    MOVWF tempPixelX
+    MOVF Y1, W
+    MOVWF tempPixelY
     
-   MOVF  X0, W
-   MOVWF X1
-   
-   MOVF  Y0, W
-   MOVWF Y1
-   
-   CALL definirIntervalo
+    MOVF  X0, W
+    MOVWF X1
 
-   MOVF  X1old, W 
-   MOVWF X1
-   MOVF  Y1old, W
-   MOVWF Y1
-   
-   
-   MOVF COR1, W
-   CALL enviarDados
-   MOVF COR2, W
-   CALL enviarDados
-   MOVF COR3, W
-   CALL enviarDados
-   
-   RETURN
+    MOVF  Y0, W
+    MOVWF Y1
+
+    CALL definirIntervalo
+    
+    MOVF tempPixelX, W
+    MOVWF X1
+    MOVF tempPixelY, W
+    MOVWF Y1
+;    MOVF  X1old, W 
+;    MOVWF X1
+;    MOVF  Y1old, W
+;    MOVWF Y1
+
+
+    MOVF COR1, W
+    CALL enviarDados
+    MOVF COR2, W
+    CALL enviarDados
+    MOVF COR3, W
+    CALL enviarDados
+
+    RETURN
 
 desenharRetanguloPreenchido:
 desenharReta:
@@ -315,26 +584,6 @@ desenharRetangulo:
 ; ddF_y: incremento do erro para Y
 ; X: variável de posição X temporária
 ; Y: variável de posição Y temporária
-
-desenharCircunferenciaPreenchida:
-    MOVF  Raio, W
-    MOVWF RaioOld
-    
-    loopPreenchimento
-	BCF STATUS, C
-	MOVLW .2  
-	SUBWF Raio, W                   
-	BTFSC STATUS, Z              
-	    GOTO fimLoopPreenchimento 
-	    CALL desenharCircunferencia
-
-	DECF Raio, F
-	GOTO loopPreenchimento
-	
-    fimLoopPreenchimento
-	MOVF  RaioOld, W
-	MOVWF Raio
-	RETURN
     
 desenharCircunferencia:
     ; Inicializações para o algoritmo de Bresenham
@@ -402,70 +651,79 @@ desenharCircunferencia:
        RETURN                       ; Fim da função
 
    ; Função para desenhar os pontos iniciais do círculo
-   desenharBaseCircunferencia
-       ; Desenha os quatro pontos iniciais do círculo
-       MOVF  Y0, W
-       MOVWF Y0old
-       MOVF  X0, W
-       MOVWF X0old
-       
-       MOVF  Raio, W
-       ADDWF Y0  , F
-       CALL  desenharPixel           ; (X0, Y0 + Raio)
+    desenharBaseCircunferencia;=================================================
+	; Desenha os quatro pontos iniciais do círculo
+	MOVF  Y0, W
+	MOVWF Y0old
+	MOVF  X0, W
+	MOVWF X0old
 
-       MOVF  Y0old, W
-       MOVWF Y0
-       
-       MOVF  Raio, W
-       SUBWF Y0  , W
-       MOVWF Y0 
-       MOVWF temp_y
-       CALL  desenharPixel           ; (X0, Y0 - Raio)
+	MOVF  Raio, W
+	ADDWF Y0  , F
+	CALL  desenharPixel           ; (X0, Y0 + Raio)
 
-       MOVF  Y0old, W
-       MOVWF Y0
-       
-       MOVF  Raio , W
-       ADDWF X0   , F
-       CALL  desenharPixel           ; (X0 + Raio, Y0)
+	MOVF  Y0old, W
+	MOVWF Y0
 
-       MOVF  X0old, W
-       MOVWF X0  
+	MOVF  Raio, W
+	SUBWF Y0  , W
+	MOVWF Y0 
+	MOVWF temp_y
+	CALL  desenharPixel           ; (X0, Y0 - Raio)
+
+	MOVF  Y0old, W
+	MOVWF Y0
+
+	MOVF  Raio , W
+	ADDWF X0   , F
+	CALL  desenharPixel           ; (X0 + Raio, Y0)
+
+	MOVF  X0old, W
+	MOVWF X0  
        
 	MOVF  Raio , W
 	SUBWF X0   , F
 	CALL  desenharPixel           ; (X0 - Raio, Y0)
 	
-	MOVLW .1
-	MOVWF Altura
-	MOVF Raio, W
-	MOVWF Largura
-	ADDWF Largura, F
-	CALL desenharReta
+	BCF STATUS, Z
+	MOVF circPreenchido, W
+	BTFSC circPreenchido, 0
+	    CALL preencherCircunferencia
 
 	MOVF  X0old, W
 	MOVWF X0
-       
-	MOVF temp_y, W
-	MOVWF Y0
-	MOVLW .1
-	MOVWF Largura
-	MOVF Raio, W
-	MOVWF Altura
-	ADDWF Altura, F
-	CALL desenharReta
-       
-       RETURN
-
-   ; Função para desenhar os 8 pontos simétricos
-   desenharPixelSimetricos
+	
+	GOTO FIM
+	preencherCircunferencia
+	    MOVLW .1
+	    MOVWF Altura
+	    MOVF Raio, W
+	    MOVWF Largura
+	    ADDWF Largura, F
+	    CALL desenharReta
+	    
+	    MOVF temp_y, W
+	    MOVWF Y0
+	    MOVLW .1
+	    MOVWF Largura
+	    MOVF Raio, W
+	    MOVWF Altura
+	    ADDWF Altura, F
+	    CALL desenharReta
+		
+	    RETURN
+	FIM
+	    RETURN
+    ;===========================================================================   
+    ; Função para desenhar os 8 pontos simétricos
+    desenharPixelSimetricos;====================================================
 	MOVF  X , W	  	    
 	ADDWF X0, W		    ; X0 = X0 + X
 	MOVWF X0
 	MOVWF temp_x
 	MOVF  Y , W
 	ADDWF Y0, F		    ; Y0 = Y0 + Y
-	CALL  desenharPixel         ; Desenha o pixel em (X0 + X, Y0 + Y)
+	CALL  desenharPixel ; Desenha o pixel em (X0 + X, Y0 + Y)
       
 	MOVF  X0old, W
 	MOVWF X0
@@ -474,7 +732,7 @@ desenharCircunferencia:
 	SUBWF X0, W		    ; X0 = X0 - X    
 	MOVWF X0
 	MOVWF temp_x1
-	CALL desenharPixel            ; Desenha o pixel em (X0 - X, Y0 + Y)
+	CALL desenharPixel ; Desenha o pixel em (X0 - X, Y0 + Y)
 
 	MOVF  X0old, W
 	MOVWF X0
@@ -487,112 +745,130 @@ desenharCircunferencia:
 	SUBWF Y0, W		    ; Y0 = Y0 - y
 	MOVWF Y0
 	MOVWF temp_y
-	CALL desenharPixel            ; Desenha o pixel em (X0 + X, Y0 - Y)
-      
-	MOVF temp_x, W
-	MOVWF X0
-	MOVF temp_y, W
-	MOVWF Y0
-	MOVLW .1
-	MOVWF Largura
-	MOVF Y, W
-	MOVWF Altura
-	ADDWF Altura, F
-	CALL desenharReta
+	CALL desenharPixel ; Desenha o pixel em (X0 + X, Y0 - Y)
 	
-	MOVF temp_x1, W
+	BCF STATUS, Z
+	MOVF circPreenchido, W
+	BTFSC circPreenchido, 0
+	    CALL preencherCircunferencia1
+      
+	GOTO PULA1
+	preencherCircunferencia1    
+	    MOVF temp_x, W
+	    MOVWF X0
+	    MOVF temp_y, W
+	    MOVWF Y0
+	    MOVLW .1
+	    MOVWF Largura
+	    MOVF Y, W
+	    MOVWF Altura
+	    ADDWF Altura, F
+	    CALL desenharReta
+	
+	    MOVF temp_x1, W
+	    MOVWF X0
+	    MOVF temp_y, W
+	    MOVWF Y0
+	    MOVLW .1
+	    MOVWF Largura
+	    MOVF Y, W
+	    MOVWF Altura
+	    ADDWF Altura, F
+	    CALL desenharReta
+	    RETURN
+	PULA1
+      
+	MOVF  X0old, W
 	MOVWF X0
+
 	MOVF temp_y, W
 	MOVWF Y0
-	MOVLW .1
-	MOVWF Largura
-	MOVF Y, W
-	MOVWF Altura
-	ADDWF Altura, F
-	CALL desenharReta
-      
-      MOVF  X0old, W
-      MOVWF X0
+	MOVF  X , W
+	SUBWF X0, F         ; X0 = X0 - X
+	CALL  desenharPixel ; Desenha o pixel em (X0 - X, Y0 - Y)
 
-      MOVF temp_y, W
-      MOVWF Y0
-      MOVF  X , W
-      SUBWF X0, F		    ; X0 = X0 - X
-      CALL  desenharPixel           ; Desenha o pixel em (X0 - X, Y0 - Y)
-      
-      MOVF  X0old, W
-      MOVWF X0
-      MOVF  Y0old, W
-      MOVWF Y0
-
-      MOVF  Y , W
-      ADDWF X0, F		    ; X0 = X0 + Y
-      MOVF  X , W
-      ADDWF Y0, W		    ; Y0 = Y0 + X
-      MOVWF Y0
-      MOVWF temp_x1
-      CALL  desenharPixel           ; Desenha o pixel em (X0 + Y, Y0 + X)
-      
-      MOVF  X0old, W
-      MOVWF X0
-
-      MOVF  Y , W
-      SUBWF X0, W		    ; X0 = X0 - Y
-      MOVWF X0
-      MOVWF temp_x
-      CALL  desenharPixel           ; Desenha o pixel em (X0 - Y, Y0 + X)
-      
-      MOVF  X0old, W
-      MOVWF X0
-      MOVF  Y0old, W
-      MOVWF Y0
+	MOVF  X0old, W
+	MOVWF X0
+	MOVF  Y0old, W
+	MOVWF Y0
 
 	MOVF  Y , W
-	ADDWF X0, F     		    ; X0 = X0 + Y
+	ADDWF X0, F         ; X0 = X0 + Y
+	MOVF  X , W 
+	ADDWF Y0, W	    ; Y0 = Y0 + X
+	MOVWF Y0
+	MOVWF temp_x1
+	CALL  desenharPixel ; Desenha o pixel em (X0 + Y, Y0 + X)
+
+	MOVF  X0old, W
+	MOVWF X0
+
+	MOVF  Y , W
+	SUBWF X0, W	    ; X0 = X0 - Y
+	MOVWF X0
+	MOVWF temp_x
+	CALL  desenharPixel ; Desenha o pixel em (X0 - Y, Y0 + X)
+
+	MOVF  X0old, W
+	MOVWF X0
+	MOVF  Y0old, W
+	MOVWF Y0
+
+	MOVF  Y , W
+	ADDWF X0, F         ; X0 = X0 + Y
 	MOVF  X , W		    
-	SUBWF Y0, W		    ; Y0 = Y0 - X
+	SUBWF Y0, W         ; Y0 = Y0 - X
 	MOVWF Y0
 	MOVWF temp_y
-	CALL  desenharPixel           ; Desenha o pixel em (X0 + Y, Y0 - X)
-      
-	MOVF temp_x, W
-	MOVWF X0
-	MOVF temp_y, W
-	MOVWF Y0
-	MOVLW .1
-	MOVWF Altura
-	MOVF Y, W
-	MOVWF Largura
-	ADDWF Largura, F
-	CALL desenharReta
+	CALL  desenharPixel ; Desenha o pixel em (X0 + Y, Y0 - X)
 	
-	MOVF temp_x, W
-	MOVWF X0
-	MOVF temp_x1, W
-	MOVWF Y0
-	MOVLW .1
-	MOVWF Altura
-	MOVF Y, W
-	MOVWF Largura
-	ADDWF Largura, F
-	CALL desenharReta
+	BCF STATUS, Z
+	MOVF circPreenchido, W
+	BTFSC circPreenchido, 0
+	    CALL preencherCircunferencia2
       
+	GOTO PULA2
+	preencherCircunferencia2    
+	    MOVF temp_x, W
+	    MOVWF X0
+	    MOVF temp_y, W
+	    MOVWF Y0
+	    MOVLW .1
+	    MOVWF Altura
+	    MOVF Y, W
+	    MOVWF Largura
+	    ADDWF Largura, F
+	    CALL desenharReta
+
+	    MOVF temp_x, W
+	    MOVWF X0
+	    MOVF temp_x1, W
+	    MOVWF Y0
+	    MOVLW .1
+	    MOVWF Altura
+	    MOVF Y, W
+	    MOVWF Largura
+	    ADDWF Largura, F
+	    CALL desenharReta
+	    RETURN
+	PULA2    
+	
 	MOVF temp_y, W
 	MOVWF Y0
 	MOVF  X0old, W
 	MOVWF X0
 
-      MOVF  Y , W
-      SUBWF X0, F		    ; X0 = X0 - Y
-      CALL  desenharPixel           ; Desenha o pixel em (X0 - Y, Y0 - X)
-      
-      MOVF  X0old, W
-      MOVWF X0
-      MOVF  Y0old, W
-      MOVWF Y0
+	MOVF  Y , W
+	SUBWF X0, F		    ; X0 = X0 - Y
+	CALL  desenharPixel ; Desenha o pixel em (X0 - Y, Y0 - X)
 
-      RETURN
-      
+	MOVF  X0old, W
+	MOVWF X0
+	MOVF  Y0old, W
+	MOVWF Y0
+
+	RETURN
+    ;===========================================================================  
 desenharTriangulo:
     MOVF  X0tri, W
     MOVWF X0
@@ -723,6 +999,7 @@ desenharLinha:
     ;===========================================================================
       
     x1MQx0;=====================================================================
+	BCF STATUS, C
 	MOVF    dx, W
 	MOVWF   err
 	RRF     err, F  ; err = dx / 2
@@ -886,4 +1163,4 @@ microDelay:
    RETURN
 
 ;====================================================================
-      END
+END
